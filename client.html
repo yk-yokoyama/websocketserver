@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+    <div>
+        <label for="ip">ip address</label>
+        <input type="text" id="ip" value="">
+    </div>
+    <div>
+        <label for="port">port</label>
+        <input type="text" id="port" value="">
+    </div>
+    <button id="connect">connect</button>
+    <input id="message_to_send" value=""></input>
+    <button id="send">send</button>
+    <ul id="received"></ul>
+</body>
+<script>
+    let sock = undefined;
+    document.getElementById("send").addEventListener("click", e => {
+        sock?.send(document.getElementById("message_to_send").value);
+    })
+    document.getElementById("connect").addEventListener("click", e => {
+        const ip = document.getElementById("ip").value;
+        const port = document.getElementById("port").value;
+        sock = new WebSocket(`ws://${ip}:${port}`);
+
+        sock.addEventListener("open", e => {
+            console.log(`open ${e}`)
+        })
+        sock.addEventListener("message", e => {
+            console.log(e);
+            const elem = document.createElement("li");
+            elem.textContent = `type:${e.type}, data:${e.data}`;
+            document.getElementById("received").appendChild(elem);
+        })
+    })
+</script>
+</html>
