@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
             })
 
             thread {
+                server?.connectionLostTimeout = 10
                 server?.start()
                 Log.d("MainActivity", "server started")
             }
