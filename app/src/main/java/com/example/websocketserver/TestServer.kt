@@ -30,25 +30,36 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
     }
 
     override fun onClose(conn: WebSocket?, code: Int, reason: String?, remote: Boolean) {
-        Log.i("TestServer", "### onClose ###")
-        Log.i("TestServer", "close connection = ${conn?.remoteSocketAddress}")
-        Log.i("TestServer", "code = $code")
-        Log.i("TestServer", "reason = $reason")
-        Log.i("TestServer", "remote = $remote")
-        conn?.send("切断しました")
+        try {
+            Log.i("TestServer", "### onClose ###")
+            Log.i("TestServer", "close connection = ${conn?.remoteSocketAddress}")
+            Log.i("TestServer", "code = $code")
+            Log.i("TestServer", "reason = $reason")
+            Log.i("TestServer", "remote = $remote")
+        } catch (e: Exception) {
+            Log.e("TestServer", "onClose error", e)
+        }
     }
 
     override fun onMessage(conn: WebSocket?, message: String?) {
-        Log.i("TestServer", "### onMessage ###")
-        Log.i("TestServer", "message = $message")
-        callback?.onMessageReceived(message ?: "")
-        conn?.send("メッセージを受け取りました = ${message ?: ""}")
+        try {
+            Log.i("TestServer", "### onMessage ###")
+            Log.i("TestServer", "message = $message")
+            callback?.onMessageReceived(message ?: "")
+            conn?.send("メッセージを受け取りました = ${message ?: ""}")
+        } catch (e: Exception) {
+            Log.e("TestServer", "onMessage error", e)
+        }
     }
 
     override fun onError(conn: WebSocket?, ex: Exception?) {
-        Log.i("TestServer", "### onError ###")
-        Log.i("TestServer", "error message = ${ex?.message ?: "error message is null"}")
-        conn?.send("エラーが発生しました")
+        try {
+            Log.i("TestServer", "### onError ###")
+            Log.i("TestServer", ex?.stackTraceToString() ?: "stack trace is null")
+            Log.i("TestServer", "error message = ${ex?.message ?: "error message is null"}")
+        } catch (e: Exception) {
+            Log.e("TestServer", "onError error", e)
+        }
     }
 
     override fun onStart() {
