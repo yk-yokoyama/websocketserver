@@ -5,6 +5,7 @@ import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import java.net.InetSocketAddress
+import java.util.UUID
 
 /**
  * Websocketテストサーバー
@@ -16,6 +17,7 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
     }
 
     private var callback: WebsocketCallback? = null
+    private val connectionMap = mutableMapOf<InetSocketAddress, String>()
 
     fun setWebSocketCallback(callback: WebsocketCallback?) {
         this.callback = callback
@@ -26,8 +28,10 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
         Log.i("TestServer", "### onOpen ###")
         Log.i("TestServer", "new connection = ${conn.remoteSocketAddress}")
 
-        // TODO: クライアント識別子を取得or生成する
-        conn.send("接続しました")
+        val uuid = UUID.randomUUID().toString()
+        connectionMap[conn.remoteSocketAddress] = uuid
+        Log.i("TestServer", "connection = $connectionMap")
+        broadcast("${uuid}が接続しました")
     }
 
     override fun onClose(conn: WebSocket?, code: Int, reason: String?, remote: Boolean) {
@@ -38,6 +42,13 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
             Log.i("TestServer", "code = $code")
             Log.i("TestServer", "reason = $reason")
             Log.i("TestServer", "remote = $remote")
+
+            val uuid = conn?.remoteSocketAddress?.let { getUUID(it) }
+            broadcast("${uuid}が切断しました")
+            
+            connectionMap.remove(conn?.remoteSocketAddress)
+            Log.i("TestServer", "connection = $connectionMap")
+
         } catch (e: Exception) {
             Log.e("TestServer", "onClose error", e)
         }
@@ -45,7 +56,8 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
 
     override fun onMessage(conn: WebSocket?, message: String?) {
         try {
-            val receivedMessage: String = "$message (${conn?.remoteSocketAddress})"
+            val uuid = conn?.remoteSocketAddress?.let { getUUID(it) }
+            val receivedMessage = "$message ($uuid)"
             Log.i("TestServer", "### onMessage ###")
             Log.i("TestServer", receivedMessage)
             broadcast(receivedMessage)
@@ -69,5 +81,9 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
         callback?.onMessageReceived("server started")
         Log.i("TestServer", "### onStart ###")
         Log.i("TestServer", "server started")
+    }
+
+    private fun getUUID(address: InetSocketAddress): String {
+        return connectionMap[address] ?: ""
     }
 }

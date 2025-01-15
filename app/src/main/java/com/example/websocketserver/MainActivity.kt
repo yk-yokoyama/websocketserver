@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendMessage() {
         val message = findViewById<EditText>(R.id.send_message).text.toString()
-        server?.broadcast(message)
+        server?.broadcast("[server]$message")
         Log.d("MainActivity", "send message = $message")
     }
 
