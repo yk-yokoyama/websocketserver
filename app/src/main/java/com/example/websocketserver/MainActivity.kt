@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +20,7 @@ class MainActivity : AppCompatActivity() {
 
     private val serverStartButton by lazy { findViewById<Button>(R.id.button_start_server) }
     private val sendMessageButton by lazy { findViewById<Button>(R.id.btn_send_message) }
+    private val scrollView by lazy { findViewById<ScrollView>(R.id.scrollView) }
     private val logTextView by lazy { findViewById<TextView>(R.id.logTextView) }
 
     private var server: TestServer? = null
@@ -111,6 +113,7 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             logTextView.append(message)
             logTextView.append("\n")
+            scrollView.fullScroll(ScrollView.FOCUS_DOWN)
         }
     }
 }

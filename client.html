@@ -183,6 +183,7 @@
       .container {
         flex-direction: column;
       }
+
       .message-area {
         width: 75%;
       }
@@ -284,25 +285,25 @@
         messageArea.scrollTop = messageArea.scrollHeight;
       };
 
-    disconnectButton.addEventListener('click', () => {
-      if (websocket) {
-        websocket.close();
-      }
-    });
+      disconnectButton.addEventListener('click', () => {
+        if (websocket) {
+          websocket.close();
+        }
+      });
 
-    messageInput.addEventListener('input', () => {
-      sendButton.disabled = messageInput.value.trim() === "";
-    });
+      messageInput.addEventListener('input', () => {
+        sendButton.disabled = messageInput.value.trim() === "";
+      });
 
-    sendButton.addEventListener('click', () => {
-      const message = messageInput.value;
-      if (websocket && message.trim() !== "") {
-        websocket.send(message);
-        messageInput.value = '';
-        sendButton.disabled = true;
-      }
+      sendButton.addEventListener('click', () => {
+        const message = messageInput.value;
+        if (websocket && message.trim() !== "") {
+          websocket.send(message);
+          messageInput.value = '';
+          sendButton.disabled = true;
+        }
+      });
     });
-  });
   </script>
 </body>
 
