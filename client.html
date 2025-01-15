@@ -1,41 +1,307 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-</head>
-<body>
-    <div>
-        <label for="ip">ip address</label>
-        <input type="text" id="ip" value="">
-    </div>
-    <div>
-        <label for="port">port</label>
-        <input type="text" id="port" value="">
-    </div>
-    <button id="connect">connect</button>
-    <input id="message_to_send" value=""></input>
-    <button id="send">send</button>
-    <ul id="received"></ul>
-</body>
-<script>
-    let sock = undefined;
-    document.getElementById("send").addEventListener("click", e => {
-        sock?.send(document.getElementById("message_to_send").value);
-    })
-    document.getElementById("connect").addEventListener("click", e => {
-        const ip = document.getElementById("ip").value;
-        const port = document.getElementById("port").value;
-        sock = new WebSocket(`ws://${ip}:${port}`);
 
-        sock.addEventListener("open", e => {
-            console.log(`open ${e}`)
-        })
-        sock.addEventListener("message", e => {
-            console.log(e);
-            const elem = document.createElement("li");
-            elem.textContent = `type:${e.type}, data:${e.data}`;
-            document.getElementById("received").appendChild(elem);
-        })
-    })
-</script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Client</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #fff;
+      text-align: center;
+      padding: 10px 20px;
+      margin: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      font-size: 1.5em;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 70%;
+      max-width: 1000px;
+      margin-top: 60px;
+      flex: 1;
+      transition: margin-left 0.5s;
+      margin-left: 300px;
+    }
+
+    .input-group {
+      display: flex;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+
+    .address-container {
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: block;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background-color: transparent;
+    }
+
+    button {
+      width: auto;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background-color: #4682B4;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #button-group {
+      display: flex;
+    }
+
+    #connect-button {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    #disconnect-button {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    #message-area {
+      width: 75%;
+      max-width: 1000px;
+      min-width: 400px;
+      height: 300px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      flex: 1;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar {
+      height: 100%;
+      width: 300px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #d3d3d3;
+      overflow-x: hidden;
+      transition: 0.5s;
+      padding-top: 60px;
+      z-index: 1001;
+    }
+
+    .sidebar a {
+      padding: 10px 15px;
+      text-decoration: none;
+      font-size: 18px;
+      color: #818181;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      color: #f1f1f1;
+    }
+
+    .openbtn {
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #d3d3d3;
+      color: #818181;
+      padding: 10px 15px;
+      border: none;
+      position: fixed;
+      top: 10px;
+      left: 0;
+      z-index: 1002;
+      transition: left 0.5s, background-color 0.3s;
+    }
+
+    .openbtn:hover {
+      background-color: #f1f1f1;
+    }
+
+    .bottom-input {
+      bottom: 0;
+      width: 75%;
+      max-width: 1000px;
+      min-width: 400px;
+      background-color: #fff;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      transition: margin-left 0.5s;
+      border: none;
+      margin-bottom: 20px;
+    }
+
+    .bottom-input input[type="text"] {
+      flex: 1;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      height: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .message-area {
+        width: 75%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1></h1>
+  <div id="mySidebar" class="sidebar">
+    <button class="openbtn" onclick="toggleNav()">☰</button>
+    <div class="address-container" id="addressContainer">
+      <div class="input-group">
+        <input type="text" id="address" placeholder="address" value="localhost">
+      </div>
+      <div class="input-group">
+        <input type="text" id="port" placeholder="port" value="8080">
+      </div>
+      <div class="button-group">
+        <button id="connect-button">接続</button>
+        <button id="disconnect-button" disabled>切断</button>
+      </div>
+    </div>
+  </div>
+  <div class="container" id="mainContent">
+    <div id="message-area"></div>
+    <div class="bottom-input" id="bottomInput">
+      <input type="text" id="message" placeholder="メッセージを入力">
+      <button id="send-button" disabled>送信</button>
+    </div>
+  </div>
+  <script>
+    let isFirstToggle = true;
+
+    function toggleNav() {
+      const sidebar = document.getElementById("mySidebar");
+      const openbtn = document.querySelector(".openbtn");
+      const mainContent = document.getElementById("mainContent");
+      const bottomInput = document.getElementById("bottomInput");
+      const addressContainer = document.getElementById("addressContainer");
+
+      if (sidebar.style.left === "0px" || isFirstToggle) {
+        sidebar.style.left = "-50px";
+        sidebar.style.width = "100px";
+        mainContent.style.marginLeft = "0";
+        bottomInput.style.marginLeft = "0";
+        addressContainer.style.opacity = "0";
+        setTimeout(() => {
+          addressContainer.style.display = "none";
+        }, 500);
+        isFirstToggle = false;
+      } else {
+        sidebar.style.left = "0";
+        sidebar.style.width = "300px";
+        mainContent.style.marginLeft = "300px";
+        addressContainer.style.display = "block";
+        setTimeout(() => {
+          addressContainer.style.opacity = "1";
+        }, 0);
+      }
+    }
+
+    const addressInput = document.getElementById('address');
+    const portInput = document.getElementById('port');
+    const connectButton = document.getElementById('connect-button');
+    const disconnectButton = document.getElementById('disconnect-button');
+    const messageInput = document.getElementById('message');
+    const sendButton = document.getElementById('send-button');
+    const messageArea = document.getElementById('message-area');
+
+    let websocket;
+
+    connectButton.addEventListener('click', () => {
+      const address = addressInput.value;
+      const port = portInput.value;
+      websocket = new WebSocket(`ws://${address}:${port}`);
+
+      websocket.onopen = () => {
+        connectButton.disabled = true;
+        disconnectButton.disabled = false;
+      };
+
+      websocket.onmessage = (event) => {
+        const message = document.createElement('div');
+        message.textContent = event.data;
+        messageArea.appendChild(message);
+        messageArea.scrollTop = messageArea.scrollHeight;
+      };
+
+      websocket.onclose = () => {
+        connectButton.disabled = false;
+        disconnectButton.disabled = true;
+        sendButton.disabled = true;
+
+        const message = document.createElement('div');
+        message.textContent = "[client]サーバーとの接続が切断されました。";
+        messageArea.appendChild(message);
+        messageArea.scrollTop = messageArea.scrollHeight;
+      };
+
+    disconnectButton.addEventListener('click', () => {
+      if (websocket) {
+        websocket.close();
+      }
+    });
+
+    messageInput.addEventListener('input', () => {
+      sendButton.disabled = messageInput.value.trim() === "";
+    });
+
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value;
+      if (websocket && message.trim() !== "") {
+        websocket.send(message);
+        messageInput.value = '';
+        sendButton.disabled = true;
+      }
+    });
+  });
+  </script>
+</body>
+
 </html>
