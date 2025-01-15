@@ -22,6 +22,7 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
     }
 
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
+        callback?.onMessageReceived("new connection = ${conn.remoteSocketAddress}")
         Log.i("TestServer", "### onOpen ###")
         Log.i("TestServer", "new connection = ${conn.remoteSocketAddress}")
 
@@ -31,6 +32,7 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
 
     override fun onClose(conn: WebSocket?, code: Int, reason: String?, remote: Boolean) {
         try {
+            callback?.onMessageReceived("close connection = ${conn?.remoteSocketAddress}")
             Log.i("TestServer", "### onClose ###")
             Log.i("TestServer", "close connection = ${conn?.remoteSocketAddress}")
             Log.i("TestServer", "code = $code")
@@ -43,10 +45,11 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
 
     override fun onMessage(conn: WebSocket?, message: String?) {
         try {
+            val receivedMessage: String = "$message (${conn?.remoteSocketAddress})"
             Log.i("TestServer", "### onMessage ###")
-            Log.i("TestServer", "message = $message")
-            callback?.onMessageReceived(message ?: "")
-            conn?.send("メッセージを受け取りました = ${message ?: ""}")
+            Log.i("TestServer", receivedMessage)
+            broadcast(receivedMessage)
+            callback?.onMessageReceived(receivedMessage)
         } catch (e: Exception) {
             Log.e("TestServer", "onMessage error", e)
         }
@@ -63,6 +66,7 @@ class TestServer(address: InetSocketAddress) : WebSocketServer(address) {
     }
 
     override fun onStart() {
+        callback?.onMessageReceived("server started")
         Log.i("TestServer", "### onStart ###")
         Log.i("TestServer", "server started")
     }
